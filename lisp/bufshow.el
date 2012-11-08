@@ -95,18 +95,20 @@ the current directory.
     (find-file file)
     (widen)
     (goto-char (point-min))
-    (cond
-     ((assoc major-mode bufshow-mode-functions)
-      (funcall (cdr (assoc major-mode bufshow-mode-functions)) token))
-     ((assoc 'default bufshow-mode-functions)
-      (funcall (cdr (assoc 'default bufshow-mode-functions)) token))
-     (t (error "no bufshow mode function for this buffer.")))))
+    (if token
+        (cond
+         ((assoc major-mode bufshow-mode-functions)
+          (funcall (cdr (assoc major-mode bufshow-mode-functions)) token))
+         ((assoc 'default bufshow-mode-functions)
+          (funcall (cdr (assoc 'default bufshow-mode-functions)) token))
+         (t (error "no bufshow mode function for this buffer."))))))
 
 (defun bufshow-narrow-to-org-id (token)
   "Narrow the buffer to the org subtree whose ID is TOKEN."
   (org-id-goto token)
   (org-narrow-to-subtree)
-  (org-show-entry))
+  (org-show-subtree)
+  (run-hook-with-args 'org-cycle-hook 'subtree))
 
 (defun bufshow-narrow-to-token (token)
   "Narrow the buffer using begin/end tokens."
