@@ -1,0 +1,3 @@
+#!/bin/sh
+grep :version lisp/bufshow.el \
+  | sed -E 's/^.*:version *"([^"]*)"/\1/'
