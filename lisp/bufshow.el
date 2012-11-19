@@ -30,6 +30,9 @@
 ;; For more information see `bufshow-mode' and `bufshow-start'.
 ;;
 ;;; Code
+(eval-when-compile
+  (require 'org))
+
 (defgroup bufshow nil
   "A simple presentation tool for Emacs."
   :version "0.1.0"

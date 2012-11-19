@@ -1,0 +1,3 @@
+[submodule "elpkg"]
+	path = elpkg
+	url = git://pmade.com/elpkg

@@ -1,15 +1,2 @@
-################################################################################
-VERSION = $(shell script/version)
-PACKAGE = bufshow-$(VERSION)
-TARBALL = $(PACKAGE).tar
-FILES   = $(shell find . -type f | egrep -v '.git|GNUmakefile|script')
-
-################################################################################
-.PHONEY: all clean
-
-################################################################################
-all: $(TARBALL)
-
-################################################################################
-$(TARBALL): $(FILES)
-	sh -c 'exit 1' # TODO:
+NAME = bufshow
+include elpkg/elpkg.mk
