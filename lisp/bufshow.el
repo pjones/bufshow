@@ -22,7 +22,13 @@
 ;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ;;
 ;; Commentary:
-
+;;
+;; A very simple minor mode for moving forward and backward through an
+;; ordered set of buffers, possibly narrowing the buffer in the
+;; process.
+;;
+;; For more information see `bufshow-mode' and `bufshow-start'.
+;;
 ;;; Code
 (defgroup bufshow nil
   "A simple presentation tool for Emacs."
@@ -37,7 +43,8 @@
 to narrow a buffer.  When showing a buffer as a presentation
 slide the function listed in this alist for the major mode will
 be invoked to narrow the buffer to the slide.  The function will
-be called with narrowing token given to `bufshow-start'."
+be called with narrowing token given in the `bufshow-start'
+slides vector."
   :type 'alist
   :group 'bufshow)
 
@@ -47,9 +54,17 @@ be called with narrowing token given to `bufshow-start'."
 (defvar bufshow--dir nil)
 
 ;;; Interactive Functions
-(defun bufshow-load ()
-  "FIXME:"
-  (interactive))
+(defun bufshow-load (file)
+  "Evaluates the elisp FILE which should contain a call to
+`bufshow-start' and then records the directory for relative file
+names in the slides vector.
+
+For information about the format of the slides vector see
+`bufshow-start'."
+  (interactive "fBufshow slides file: ")
+  (bufshow-reset)
+  (setq bufshow--dir (file-name-directory file))
+  (load-file file))
 
 (defun bufshow-next ()
   "Advance to the next slide."
@@ -58,7 +73,7 @@ be called with narrowing token given to `bufshow-start'."
         (size (length bufshow--slide-vector)))
     (bufshow-activate-slide
      (setq bufshow--slide-id (if (>= next size) 0 next)))))
-  
+
 (defun bufshow-prev ()
   "Return to the previous slide."
   (interactive)
@@ -69,24 +84,48 @@ be called with narrowing token given to `bufshow-start'."
 
 ;;; External Functions
 (defun bufshow-start (slides)
-  "Enable the bufshow global minor mode and start a presentation.
-SLIDES must be a vector of lists.  For example:
+  "Start a bufshow presentation. SLIDES must be a vector of
+lists.  For example:
 
   (bufshow-start
     [(\"file1\" \"token1\")
      (\"file2\" \"token2\")])
 
-This defines the order of slides.  File names will be relative to
-the current directory.
-"
+This defines the order of slides.  Each list in the vector should
+contain the follow elements in order:
+
+  1. A file name relative to the current directory.
+
+  2. This element is optional but if present controls how the
+     buffer will be narrowed.  The default behavior is to locate
+     a line in the buffer that contains \"{BEGIN: token}\" then
+     find a succeeding line that contains \"{END}\".  The buffer
+     will be narrowed between those lines (exclusive).  Nested
+     tokens are not supported.
+
+     Some buffers have special behaviors when you supply a token
+     in this element.  For example, for an `org-mode' buffer the
+     token should contain the ID of a heading and bufshow will
+     narrow to that org sub-tree.
+
+It is recommended that you write an elisp file that contains a
+call to this function with the slides vector then use
+`bufshow-load' to evaluate this file and correctly set the base
+directory. "
   (unless (vectorp slides) (error "slides should be a vector."))
   (if (= (length slides) 0) (error "slides can't be empty."))
   (setq bufshow--slide-id 0
         bufshow--slide-vector slides
-        bufshow--dir default-directory)
+        bufshow--dir (or bufshow--dir default-directory))
   (bufshow-activate-slide 0))
 
 ;;; Internal Functions
+(defun bufshow-reset ()
+  "Reset the internal bufshow variables to their defaults."
+  (setq bufshow--slide-id 0
+        bufshow--slide-vector []
+        bufshow--dir nil))
+
 (defun bufshow-activate-slide (n)
   "Active slide number N."
   (let* ((slide (aref bufshow--slide-vector bufshow--slide-id))
@@ -122,3 +161,30 @@ the current directory.
                 (forward-line -1)
                 (point))))
     (narrow-to-region start end)))
+
+;;;###autoload
+(define-minor-mode bufshow-mode
+  "Bufshow mode is a presentation tool for Emacs.  Enabling the
+global minor mode is the first step to using it.  You'll also
+need to define an elisp vector that contains the list of files
+and tokens to use during the presentation and invoke
+`bufshow-load' or `bufshow-start' to start the presentation.
+
+There are key bindings to move to the next and previous slides.
+With an Emacs daemon and emacsclient it's easy to invoke the
+`bufshow-next' and `bufshow-prev' functions from a remote using
+something like lirc.
+
+\\{bufshow-mode-map}
+
+For more information on how to configure a presentation see the
+`bufshow-start' function documentation."
+  :group 'bufshow
+  :init-value nil
+  :lighter nil
+  :global t
+  :keymap `((,(kbd "C-c <f9>")  . bufshow-prev)
+            (,(kbd "C-c <f10>") . bufshow-next)
+            (,(kbd "C-c <f11>") . bufshow-load))
+  ;; Toggling the mode should clear the state variables.
+  (bufshow-reset))
