@@ -90,27 +90,32 @@ For information about the format of the slides vector see
 
 ;;; External Functions
 (defun bufshow-start (slides)
-  "Start a bufshow presentation. SLIDES must be a vector of
-lists.  For example:
+  "Start by creating an elsip file that contains a call to
+`bufshow-start' passing in a vector that represents the slides
+and their order. The elements of the SLIDES vector must be lists.
+For example:
 
-  (bufshow-start
-    [(\"file1\" \"token1\")
-     (\"file2\" \"token2\")])
+    (bufshow-start
+      [(\"file1\" \"token1\")
+       (\"file2\" \"token2\")])
 
-This defines the order of slides.  Each list in the vector should
-contain the following elements in order:
+Each list in the vector should contain the following elements in
+order:
 
-  1. A string containing a file name relative to the current
-     directory.  Instead of a string this element can be a
-     function, in which case the function will be called to show
-     a slide.  Remaining elements in the list will be given to
-     the function as arguments.
+  1. A string containing the name of a file relative to the
+     current directory.  This file will be loaded and
+     displayed/narrowed based on the next element.
+
+     Instead of a string this element can be a function, in which
+     case the function will be called to show a slide.  Any
+     remaining elements in the list will be given to the function
+     as arguments.
 
   2. This element is optional but if present controls how the
      buffer will be narrowed.  The default behavior is to locate
-     a line in the buffer that contains \"{BEGIN: token}\" then
-     find a succeeding line that contains \"{END}\".  The buffer
-     will be narrowed between those lines (exclusive).  Nested
+     a line in the buffer that contains `{BEGIN: token}` then
+     find a succeeding line that contains `{END}`.  The buffer
+     will be narrowed between these lines (exclusive).  Nested
      tokens are not supported.
 
      Some buffers have special behaviors when you supply a token
@@ -118,20 +123,23 @@ contain the following elements in order:
      token should contain the ID of a heading and bufshow will
      narrow to that org sub-tree.
 
-It is recommended that you write an elisp file that contains a
-call to this function with the slides vector then use
-`bufshow-load' to evaluate this file and correctly set the base
-directory.
+After you write an elisp file that contains a call to the
+`bufshow-start' function with a slides vector, use `bufshow-load'
+to evaluate the file and correctly set the base directory for the
+relative file names.
 
 You can write your own functions for showing a slide as described
 in item 1 above.  Interesting functions provided by bufshow
 include:
 
-  * `bufshow-split-below' and `bufshow-split-right'
+  * `bufshow-split-below' and `bufshow-split-right' for splitting
+    the frame and showing two slides at once.
 
 If your function opens temporary buffers or needs to clean up
 after itself you can add lambda expressions to be called after
 the slide is changed by using `bufshow-add-clean-up-function'.
+Make sure you're using lexical binding so the lambda expressions
+end up being closures too.
 
 Your function will have to manually handle narrowing.  You can
 use the `bufshow-load-file' and `bufshow-show-token' functions to
@@ -272,18 +280,16 @@ may have changed by a slide showing function."
 
 ;;;###autoload
 (define-minor-mode bufshow-mode
-  "Bufshow mode is a presentation tool for Emacs.  Enabling this
-global minor mode is the first step to using it.  You'll also
-need to define an elisp vector that contains the list of files
-and tokens to use during the presentation and invoke
+  "Bufshow mode is a presentation tool for Emacs.  Enabling the
+`bufshow-mode' global minor mode is the first step to using it.
+You'll also need to define an elisp vector that contains the list
+of files and tokens to use during the presentation and invoke
 `bufshow-load' or `bufshow-start' to start the presentation.
 
 There are key bindings to move to the next and previous slides.
 With an Emacs daemon and emacsclient it's easy to invoke the
 `bufshow-next' and `bufshow-prev' functions using an IR remote
 and something like lirc.
-
-\\{bufshow-mode-map}
 
 For more information on how to configure a presentation see the
 `bufshow-start' function documentation."
@@ -297,3 +303,5 @@ For more information on how to configure a presentation see the
             (,(kbd "C-c <f12>") . bufshow-stop))
   ;; Toggling the mode should clear the state variables.
   (bufshow-reset))
+
+(provide 'bufshow)
