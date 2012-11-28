@@ -1,7 +1,8 @@
 #+title: Bufshow To-do List
 
 * Features that might be nice to have
-** TODO Allow the file name to be a function in the slides vector
+** DONE Allow the file name to be a function in the slides vector
+   CLOSED: [2012-11-28 Wed 09:41]
    - Use `functionp` to figure this out
 ** TODO Allow the token to be a function in the slides vector
 ** TODO Allow the token to be a list of regular expressions
