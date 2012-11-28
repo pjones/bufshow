@@ -260,11 +260,13 @@ may have changed by a slide showing function."
   (let* ((start (save-excursion
                   (search-forward (concat "{BEGIN: " token "}"))
                   (forward-line)
+                  (beginning-of-line)
                   (point)))
          (end (save-excursion
                 (goto-char start)
                 (search-forward "{END}")
                 (forward-line -1)
+                (end-of-line)
                 (point))))
     (narrow-to-region start end)))
 
