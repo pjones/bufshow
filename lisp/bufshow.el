@@ -3,6 +3,22 @@
 ;;
 ;; Copyright (C) 2012 Peter Jones <pjones@pmade.com>
 ;;
+;; Author: Peter Jones <pjones@pmade.com>
+;; URL: https://github.com/pjones/bufshow
+;; Version: 0.1.0
+;;
+;; This file is not part of GNU Emacs.
+;;
+;;; Commentary:
+;;
+;; A very simple minor mode for moving forward and backward through an
+;; ordered set of buffers, possibly narrowing the buffer in the
+;; process.
+;;
+;; For more information see `bufshow-mode' and `bufshow-start'.
+;;
+;;; License:
+;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
 ;; "Software"), to deal in the Software without restriction, including
@@ -22,15 +38,7 @@
 ;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ;;
-;; Commentary:
-;;
-;; A very simple minor mode for moving forward and backward through an
-;; ordered set of buffers, possibly narrowing the buffer in the
-;; process.
-;;
-;; For more information see `bufshow-mode' and `bufshow-start'.
-;;
-;;; Code
+;;; Code:
 (eval-when-compile
   (require 'org))
 
