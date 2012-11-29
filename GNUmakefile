@@ -6,9 +6,10 @@ include elpkg/elpkg.mk
 all: README.md README.html
 
 ################################################################################
-README.md: $(CORE_FILE)
+README.md: $(CORE_FILE) INSTALL.md
 	echo '# Bufshow: '`$(ELPKG)/desc.sh $(CORE_FILE)`"\n" > $@
 	$(ELPKG)/fdoc2md.sh bufshow-mode $(CORE_FILE) >> $@
+	(echo; cat INSTALL.md) >> $@
 	echo "\n# Creating a Presentation\n" >> $@
 	$(ELPKG)/fdoc2md.sh bufshow-start $(CORE_FILE) >> $@
 

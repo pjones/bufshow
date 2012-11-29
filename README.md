@@ -14,6 +14,14 @@ and something like lirc.
 For more information on how to configure a presentation see the
 `bufshow-start` function documentation.
 
+# Installation
+
+Bufshow is packaged in [marmalade][], which means you can install via:
+
+    M-x list-packages
+
+[marmalade]: http://marmalade-repo.org/packages/bufshow
+
 # Creating a Presentation
 
 Start by creating an elsip file that contains a call to
