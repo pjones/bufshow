@@ -1,7 +1,5 @@
 # Bufshow: A simple presentation tool for Emacs.
 
-
-
 Bufshow mode is a presentation tool for Emacs.  Enabling the
 `bufshow-mode` global minor mode is the first step to using it.
 You'll also need to define an elisp vector that contains the list
@@ -16,10 +14,7 @@ and something like lirc.
 For more information on how to configure a presentation see the
 `bufshow-start` function documentation.
 
-
 # Creating a Presentation
-
-
 
 Start by creating an elsip file that contains a call to
 `bufshow-start` passing in a vector that represents the slides
@@ -79,3 +74,7 @@ perform the same loading and narrowing that bufshow does already.
 When you are done with the presentation you can call
 `bufshow-stop` to restore the window configuration and turn
 `bufshow-mode` off.
+
+An example presentation given using bufshow can be found here:
+
+  https://github.com/devalot/hs4rb

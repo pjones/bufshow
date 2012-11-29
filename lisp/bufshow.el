@@ -147,7 +147,11 @@ perform the same loading and narrowing that bufshow does already.
 
 When you are done with the presentation you can call
 `bufshow-stop' to restore the window configuration and turn
-`bufshow-mode' off."
+`bufshow-mode' off.
+
+An example presentation given using bufshow can be found here:
+
+  https://github.com/devalot/hs4rb"
   (unless (vectorp slides) (error "slides should be a vector."))
   (if (= (length slides) 0) (error "slides can't be empty."))
   (setq bufshow--slide-id 0
