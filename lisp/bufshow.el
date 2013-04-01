@@ -1,4 +1,4 @@
-;;; bufshow.el -- A simple presentation tool for Emacs.
+;;; bufshow.el --- A simple presentation tool for Emacs.
 ;;
 ;; Copyright (C) 2012 Peter Jones <pjones@pmade.com>
 ;;
@@ -322,3 +322,4 @@ For more information on how to configure a presentation see the
   (bufshow-reset))
 
 (provide 'bufshow)
+;;; bufshow.el ends here
