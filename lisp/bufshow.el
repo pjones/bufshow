@@ -1,10 +1,10 @@
-;;; -*- lexical-binding: t -*-
 ;;; bufshow.el -- A simple presentation tool for Emacs.
 ;;
 ;; Copyright (C) 2012 Peter Jones <pjones@pmade.com>
 ;;
 ;; Author: Peter Jones <pjones@pmade.com>
 ;; URL: https://github.com/pjones/bufshow
+;; Package-Requires: ((emacs "24.1"))
 ;; Version: 0.1.0
 ;;
 ;; This file is not part of GNU Emacs.
@@ -39,6 +39,11 @@
 ;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ;;
 ;;; Code:
+
+;; Local Variables:
+;; lexical-binding: t
+;; End:
+
 (eval-when-compile
   (require 'org))
 
