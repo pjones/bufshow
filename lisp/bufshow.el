@@ -71,6 +71,7 @@ slides vector."
 (defvar bufshow--dir nil)
 (defvar bufshow--winconfig nil)
 (defvar bufshow--restore-funcs nil)
+(defvar bufshow--was-read-only nil)
 
 ;;; Interactive Functions
 (defun bufshow-load (file)
@@ -214,7 +215,9 @@ for a call to `bufshow-show-token'."
   (let* ((name (concat bufshow--dir file)))
     (find-file name)
     (widen)
-    (goto-char (point-min))))
+    (goto-char (point-min))
+    (setq bufshow--was-read-only buffer-read-only
+          buffer-read-only t)))
 
 (defun bufshow-show-token (token)
   "Narrow to the given token."
@@ -264,14 +267,17 @@ same an indiect buffer will be created."
   (bufshow-restore)
   (setq bufshow--slide-id 0
         bufshow--slide-vector []
-        bufshow--dir nil))
+        bufshow--dir nil
+        bufshow--was-read-only nil))
 
 (defun bufshow-restore ()
   "Restore the previous window configuration and anything that
 may have changed by a slide showing function."
+  (if (not bufshow--was-read-only) (setq buffer-read-only nil))
   (if bufshow--winconfig (set-window-configuration bufshow--winconfig))
   (mapc 'funcall bufshow--restore-funcs)
-  (setq bufshow--restore-funcs nil))
+  (setq bufshow--restore-funcs nil
+        bufshow--was-read-only nil))
 
 (defun bufshow-narrow-to-org-id (token)
   "Narrow the buffer to the org subtree whose ID is TOKEN."
