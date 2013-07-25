@@ -72,6 +72,8 @@ slides vector."
 (defvar bufshow--winconfig nil)
 (defvar bufshow--restore-funcs nil)
 (defvar bufshow--was-read-only nil)
+(defvar bufshow--direction 'next)
+(defvar bufshow--reveal-buf "*bufshow-reveal*")
 
 ;;; Interactive Functions
 (defun bufshow-load (file)
@@ -89,6 +91,7 @@ For information about the format of the slides vector see
 (defun bufshow-next ()
   "Advance to the next slide."
   (interactive)
+  (setq bufshow--direction 'next)
   (let ((next (1+ bufshow--slide-id))
         (size (length bufshow--slide-vector)))
     (bufshow-activate-slide
@@ -97,6 +100,7 @@ For information about the format of the slides vector see
 (defun bufshow-prev ()
   "Return to the previous slide."
   (interactive)
+  (setq bufshow--direction 'prev)
   (let ((prev (1- bufshow--slide-id))
         (size (length bufshow--slide-vector)))
     (bufshow-activate-slide
@@ -207,6 +211,29 @@ You don't have to worry about the window configuration since that
 will be restored automatically."
   (add-to-list 'bufshow--restore-funcs func))
 
+(defun bufshow-reveal-begin (file &optional token)
+  "Create a reveal buffer and add the contents of FILE to that
+buffer.  The reveal buffer will be switched into the same major
+mode as that of FILE.  If TOKEN is non-nil only insert the
+content between the token markers."
+  (if (eq bufshow--direction 'next)
+      (let ((buf (get-buffer-create bufshow--reveal-buf)))
+        (with-current-buffer buf
+          (buffer-disable-undo buf)
+          (setq buffer-read-only nil)
+          (erase-buffer)
+          (setq buffer-read-only t))
+        (bufshow-reveal-internal-add file token))
+    (bufshow-reveal-rewind)))
+
+(defun bufshow-reveal-add (file &optional token)
+  "Add the contents of FILE to an existing reveal buffer.  You
+should have already used `bufshow-reveal-begin' before calling
+this function.  If TOKEN is non-nil only add the content for that
+token."
+  (if (eq bufshow--direction 'next) (bufshow-reveal-internal-add file token)
+    (bufshow-reveal-rewind)))
+
 ;;; Internal Functions
 (defun bufshow-load-file (file)
   "Load the given file into the current window.  This also moves
@@ -300,6 +327,41 @@ may have changed by a slide showing function."
                 (end-of-line)
                 (point))))
     (narrow-to-region start end)))
+
+(defun bufshow-reveal-rewind ()
+  "Rewind the presentation to the start of the revel or one slide
+before that depending on where the rewind starts."
+  (let* ((bufshow--direction 'next)
+         (size (length bufshow--slide-vector))
+         (last-id (1+ bufshow--slide-id))
+         (last-fun (car (aref bufshow--slide-vector
+                              (if (>= last-id size) 0 last-id)))))
+    ;; Go back to either the first reveal slide or the slide before that.
+    (while (and (/= 0 bufshow--slide-id)
+                (let ((fun (car (aref bufshow--slide-vector bufshow--slide-id))))
+                  (if (eq last-fun 'bufshow-reveal-add)
+                      ;; Skip back to the slide before a reveal begin.
+                      (member fun '(bufshow-reveal-begin bufshow-reveal-add))
+                    ;; Only go back to the reveal begin.
+                    (not (eq fun 'bufshow-reveal-begin)))))
+      (setq bufshow--slide-id (1- bufshow--slide-id)))
+    (bufshow-activate-slide bufshow--slide-id)))
+
+(defun bufshow-reveal-internal-add (file &optional token)
+  "Internal function to add content to a reveal buffer."
+  (let ((buf (get-buffer-create bufshow--reveal-buf))
+        str mode)
+    (bufshow-load-file file)
+    (if token (bufshow-show-token token))
+    (setq str (buffer-substring (point-min) (point-max))
+          mode major-mode)
+    (bufshow-restore)
+    (with-current-buffer buf
+      (setq buffer-read-only nil)
+      (insert str)
+      (funcall mode)
+      (setq buffer-read-only t))
+    (set-window-buffer (selected-window) buf)))
 
 ;;;###autoload
 (define-minor-mode bufshow-mode
