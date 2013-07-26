@@ -73,7 +73,7 @@ slides vector."
 (defvar bufshow--restore-funcs nil)
 (defvar bufshow--was-read-only nil)
 (defvar bufshow--direction 'next)
-(defvar bufshow--reveal-buf "*bufshow-reveal*")
+(defvar bufshow--scratch-buf "*bufshow*")
 
 ;;; Interactive Functions
 (defun bufshow-load (file)
@@ -217,13 +217,12 @@ buffer.  The reveal buffer will be switched into the same major
 mode as that of FILE.  If TOKEN is non-nil only insert the
 content between the token markers."
   (if (eq bufshow--direction 'next)
-      (let ((buf (get-buffer-create bufshow--reveal-buf)))
+      (let ((buf (get-buffer-create bufshow--scratch-buf))
+            (inhibit-read-only t))
         (with-current-buffer buf
           (buffer-disable-undo buf)
-          (setq buffer-read-only nil)
-          (erase-buffer)
-          (setq buffer-read-only t))
-        (bufshow-reveal-internal-add file token))
+          (erase-buffer))
+        (bufshow-append-show-scratch-buf file token))
     (bufshow-reveal-rewind)))
 
 (defun bufshow-reveal-add (file &optional token)
@@ -231,8 +230,30 @@ content between the token markers."
 should have already used `bufshow-reveal-begin' before calling
 this function.  If TOKEN is non-nil only add the content for that
 token."
-  (if (eq bufshow--direction 'next) (bufshow-reveal-internal-add file token)
+  (if (eq bufshow--direction 'next)
+      (bufshow-append-show-scratch-buf file token)
     (bufshow-reveal-rewind)))
+
+(defun bufshow-center-text (file &optional token)
+  "Display the contents of FILE in a temporary buffer centering
+the contents vertically and horizontally.  If TOKEN is non-nil
+only display the contents of the token."
+  (let ((buf (get-buffer-create bufshow--scratch-buf))
+        (win-lines (window-height (selected-window)))
+        (inhibit-read-only t)
+        buf-lines)
+    (with-current-buffer buf
+      (buffer-disable-undo)
+      (erase-buffer)
+      (bufshow-append-scratch-buf file token)
+      (center-region (point-min) (point-max))
+      (setq buf-lines (count-lines (point-min) (point-max)))
+      (goto-char (point-min))
+      (insert (make-string (- (/ win-lines 2) (/ buf-lines 2)) ?\n))
+      (goto-char (point-max))
+      (insert "\n\n")
+      (setq buffer-read-only t))
+    (set-window-buffer (selected-window) buf)))
 
 ;;; Internal Functions
 (defun bufshow-load-file (file)
@@ -242,9 +263,7 @@ for a call to `bufshow-show-token'."
   (let* ((name (concat bufshow--dir file)))
     (find-file name)
     (widen)
-    (goto-char (point-min))
-    (setq bufshow--was-read-only buffer-read-only
-          buffer-read-only t)))
+    (goto-char (point-min))))
 
 (defun bufshow-show-token (token)
   "Narrow to the given token."
@@ -266,7 +285,9 @@ for a call to `bufshow-show-token'."
       (apply file (cdr slide)))
      (t
       (bufshow-load-file file)
-      (if token (bufshow-show-token token))))))
+      (if token (bufshow-show-token token))))
+    (setq bufshow--was-read-only   buffer-read-only
+          buffer-read-only         t)))
 
 (defun bufshow-split (direction file1 file2 &optional token1 token2)
   "Split the window in the given direction and load FILE1 into
@@ -347,21 +368,27 @@ before that depending on where the rewind starts."
       (setq bufshow--slide-id (1- bufshow--slide-id)))
     (bufshow-activate-slide bufshow--slide-id)))
 
-(defun bufshow-reveal-internal-add (file &optional token)
-  "Internal function to add content to a reveal buffer."
-  (let ((buf (get-buffer-create bufshow--reveal-buf))
+(defun bufshow-append-show-scratch-buf (file &optional token)
+  "Internal function to append to the bufshow scratch buffer and
+then display it in the selected window."
+  (bufshow-append-scratch-buf file token)
+  (set-window-buffer (selected-window)
+                     (get-buffer-create bufshow--scratch-buf)))
+
+(defun bufshow-append-scratch-buf (file &optional token)
+  "Internal function to add content to the bufshow scratch buffer."
+  (let ((buf (get-buffer-create bufshow--scratch-buf))
+        (inhibit-read-only t)
         str mode)
-    (bufshow-load-file file)
-    (if token (bufshow-show-token token))
-    (setq str (buffer-substring (point-min) (point-max))
-          mode major-mode)
-    (bufshow-restore)
+    (save-excursion
+      (bufshow-load-file file)
+      (if token (bufshow-show-token token))
+      (setq str (buffer-substring (point-min) (point-max))
+            mode major-mode))
     (with-current-buffer buf
-      (setq buffer-read-only nil)
       (insert str)
       (funcall mode)
-      (setq buffer-read-only t))
-    (set-window-buffer (selected-window) buf)))
+      (goto-char (point-max)))))
 
 ;;;###autoload
 (define-minor-mode bufshow-mode
